@@ -1,0 +1,27 @@
+{
+  "name": "aniwatch-scrapper",
+  "version": "1.0.0",
+  "description": "A web-scrapper api that is used to get anime data scrapped from aniwatch.to website (formerly known as Zoro.to)",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Anuragkumarsah/pinkish-hue.git"
+  },
+  "keywords": [
+    "anime-api"
+  ],
+  "author": "Anuragkumarsah",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Anuragkumarsah/pinkish-hue/issues"
+  },
+  "homepage": "https://github.com/Anuragkumarsah/pinkish-hue#readme",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
