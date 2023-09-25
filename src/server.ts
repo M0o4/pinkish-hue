@@ -20,7 +20,19 @@ app.use(cors(corsOptions));
 
 
 app.get('/', (req : any, res : any) => {
-    res.send('Welcome to pinkish-hue API! 🎉');
+    const homeinfo = {
+        message: 'Welcome to the Aniwatch API! 🎉',
+        'endpoints (working)': [
+            "/recent-episodes"
+        ],
+        'endpoints (under development)': [
+            "/popular",
+            "/info/:id",
+            "/watch/:id",
+            "/:search-query"
+        ]
+    }
+    res.status(200).send(homeinfo);
 });
 
 app.get('/recent-episodes', async (req : any, res : any) => {
