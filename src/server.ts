@@ -21,7 +21,7 @@ app.use(cors(corsOptions));
 
 app.get('/', (req : any, res : any) => {
     const homeinfo = {
-        message: 'Welcome to the Aniwatch API! 🎉',
+        message: 'Welcome to the Pinkish-Hue API! 🎉',
         'endpoints (working)': [
             "/recent-episodes"
         ],
