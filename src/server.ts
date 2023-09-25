@@ -18,7 +18,7 @@ app.get("/", (req: any, res: any) => {
   const homeinfo = {
     message: "Welcome to the Pinkish-Hue API! 🎉",
     "endpoints (working)": ["/recent-episodes", "/popular",
-    "/:search-query"],
+    "/search?keyword=yourkeyword"],
     "endpoints (under development)": [
       "/info/:id",
       "/watch/:id"
