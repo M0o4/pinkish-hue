@@ -1,5 +1,9 @@
-import axios from 'axios'
-import {load} from 'cheerio'
+// import axios from 'axios'
+// import {load} from 'cheerio'
+
+const axios = require('axios');
+const {load} = require('cheerio');
+
 import type { IEpisodeData, IRecentEpisodes } from '../types/aniwatch.d.ts'
 
 const BASE_URL : string = 'https://aniwatch.to'
@@ -21,7 +25,7 @@ export const fetchRecentEpisodes = async ({ page = 1 }: {page : number}) : Promi
         
         const recentEpisodes: IEpisodeData[] = [];
 
-        $('div.film_list-wrap > div').each((ind, ele) => {
+        $('div.film_list-wrap > div').each((ind :any, ele : any) => {
             recentEpisodes.push({
                 id: $(ele).find('div.film-poster > a').attr('href')?.replace('/', '')!,
                 episodeNumber: parseInt($(ele).find('div.tick-eps').text().replace(/\s/g, '').replace('Ep', '').split('/')[0]),
