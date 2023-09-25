@@ -2,11 +2,11 @@
   "name": "aniwatch-scrapper",
   "version": "1.0.0",
   "description": "A web-scrapper api that is used to get anime data scrapped from aniwatch.to website (formerly known as Zoro.to)",
-  "main": "src/server.js",
+  "main": "src/server.ts",
   "type": "module",
   "scripts": {
     "test": "npm start",
-    "start": "node src/server.js"
+    "start": "ts-node src/server.ts"
   },
   "repository": {
     "type": "git",
