@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A web-scrapper api that is used to get anime data scrapped from aniwatch.to website (formerly known as Zoro.to)",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "test": "npm start"
   },
@@ -24,6 +25,7 @@
     "@types/express": "^4.17.18",
     "@types/node": "^20.6.5",
     "axios": "^1.5.0",
+    "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
     "express": "^4.18.2"
   },
