@@ -4,7 +4,7 @@
 const axios = require("axios");
 const { load } = require("cheerio");
 
-import type { IEpisodeData, IError, IRecentEpisodes, ISearchData, ISearchResult } from "../types/aniwatch.d.ts";
+import type { IAnimeInfo, IEpisode, IEpisodeData, IError, IRecentEpisodes, IRelatedAnime, ISearchData, ISearchResult, IVoiceActors } from "../types/aniwatch.d.ts";
 
 const BASE_URL: string = "https://aniwatch.to";
 
@@ -98,7 +98,7 @@ export const fetchPopular = async ({
         title: $(ele).find("h3.film-name > a").attr("title")!,
         alternateTitle: $(ele).find("h3.film-name > a").attr("data-jname")!,
         image: $(ele).find("div.film-poster > img").attr("data-src")!,
-        description: $(ele).find("div.film-detail > div.description").text()!,
+        description: $(ele).find("div.film-detail > div.description").text().replace(/\s+/g, ' ')!,
         type: $(ele)
           .find("div.film-detail > div.fd-infor > span.fdi-item")
           .first()
@@ -160,4 +160,155 @@ export const fetchSearch = async ({ keyword, page = 1 } : {keyword : string, pag
     } catch (error) {
         return {error: `Some error occurred: ${error}`};
     }
+}
+
+
+export const fetchInfo = async ({ id } : {id : string}) : Promise<IAnimeInfo | IError> => {
+
+  if(id === undefined || id === '' || id == null) return {error: "No id provided."};
+
+  try {
+      const {data} = await axiosInstance.get(`/${id}`);
+      // console.log(id);
+
+      const $ = load(data);
+
+      const info : IAnimeInfo = {
+          id: id,
+          title: "",
+          image: "",
+          type: "",
+          episodeDuration: "",
+          totalEpisodes: null,
+          description: "",
+          genres: [],
+          status: "",
+          releaseDate: "",
+          rating: null,
+          studios: [],
+          otherNames: [],
+          episodes: [],
+          voiceActors: [],
+          relations: [],
+          recommendations: [],
+          producers: [],
+      } 
+
+      $('div.anisc-info-wrap > div.anisc-info > div.item').each((ind: any, ele: any) => {
+          const title = $(ele).find('span.item-head').text();
+          switch(title) {
+              case "Genres:":
+                  $(ele).find('a').each((ind: any, ele: any) => {
+                      info.genres.push($(ele).text().replace(/\s+/g, ' '));
+                  })
+                  break;
+              case "Studios:":
+                  $(ele).find('a').each((ind: any, ele: any) => {
+                      info.studios.push($(ele).text().replace(/\s+/g, ' '));
+                  })
+                  break;
+              case "Synonyms:":
+                  $(ele).find('span.name').each((ind: any, ele: any) => {
+                      info.otherNames.push($(ele).text().replace(/\s+/g, ' '));
+                  })
+                  break;
+              case "Japanese:":
+                $(ele).find('span.name').each((ind: any, ele: any) => {
+                    info.otherNames.push($(ele).text().replace(/\s+/g, ' '));
+                })
+              break;
+              case "Premiered:":
+                  info.releaseDate = $(ele).find('span.name').text().replace(/\s+/g, ' ');
+                  break;
+              case "Status:":
+                  info.status = $(ele).find('span.name').text().replace(/\s+/g, ' ');
+                  break;
+              case "Duration:":
+                  info.episodeDuration = $(ele).find('span.name').text().replace(/\s+/g, ' ');
+                  break;
+              case "MAL Score:":
+                  info.rating = $(ele).find('span.name').text().replace(/\s+/g, ' ');
+                  break;
+              case "Overview:":
+                  info.description = $(ele).find('div.text').text().replace(/\s+/g, ' ');
+                  break;
+              case "Producers:":
+                  $(ele).find('a').each((ind: any, ele: any) => {
+                      info.producers.push($(ele).text().replace(/\s+/g, ' '));
+                  })
+                  break;
+              default:
+                  break;
+          }
+      })
+      
+      info.title = $('div.anisc-detail > h2.film-name').text().replace(/\s+/g, ' ');
+      info.image = $('div.anisc-poster > div.film-poster > img').attr('src');
+      info.totalEpisodes = $('div.film-stats > div.tick > div.tick-sub').text().replace(/\s+/g, ' ').trim();
+      info.type = $('div.film-stats > div.tick > span.item').first().text().replace(/\s+/g, ' ').trim();
+      
+      $('div.bac-list-wrap > div.bac-item').each((ind: any, ele: any) => {
+          info.voiceActors.push({
+            name: $(ele).find('div.rtl > div.pi-detail > h4.pi-name > a').text().replace(/\s+/g, ' '),
+            image: $(ele).find('div.rtl > a.pi-avatar > img').attr('data-src'),
+            role: $(ele).find('div.ltr > div.pi-detail > span.pi-cast').text().replace(/\s+/g, ' '),
+            cast: $(ele).find('div.rtl > div.pi-detail > span.pi-cast').text().replace(/\s+/g, ' '),
+            chacacterName: $(ele).find('div.ltr > div.pi-detail > h4.pi-name > a').text().replace(/\s+/g, ' '),
+            characterImage: $(ele).find('div.ltr > a.pi-avatar > img').attr('data-src'),
+          })
+      })
+
+      $('div.cbox-collapse > div.cbox-content > div.anif-block-ul > ul > li').each((ind: any, ele: any) => {
+
+          const nameAnchor = $(ele).find('div.film-detail > h3.film-name a');
+          const typeDiv = $(ele).find('div.film-detail > div.fd-infor > div.tick');
+          info.relations.push({
+              id: nameAnchor.attr('href')?.replace('/', '')!,
+              title: nameAnchor.attr('title'),
+              alternateTitle: nameAnchor.attr('data-jname'),
+              image: $(ele).find('div.film-poster > img').attr('data-src'),
+              type: typeDiv.contents().filter(function(this: any) {
+                return this.nodeType === 3; 
+              }).text().replace(/\s+/g, ' ').trim(),
+              episodeDuration: null,
+              totalEpisodes: parseInt(typeDiv.find('div.tick-sub').text().replace('Ep', '').replace(/\s+/g, ' ').trim()),
+          })
+        })
+      
+      $('div.film_list-wrap > div.flw-item').each((ind: any, ele: any) => {
+          info.recommendations.push({
+              id: $(ele).find('div.film-poster > a').attr('href')?.replace('/', '')!,
+              title: $(ele).find('h3.film-name > a').attr('title'),
+              alternateTitle: $(ele).find('h3.film-name > a').attr('data-jname'),
+              image: $(ele).find('div.film-poster > img').attr('data-src'),
+              type: $(ele).find('div.film-detail > div.fd-infor > span.fdi-item').first().text().replace(/\s+/g, ' ').trim(),
+              episodeDuration: $(ele).find('div.film-detail > div.fd-infor > span.fdi-duration').text().replace(/\s+/g, ' ').trim(),
+              totalEpisodes: parseInt($(ele).find('div.tick-eps').text().replace('Ep', '').replace(/\s+/g, ' ').trim()),
+          })
+        })
+      
+
+      const episodePage = await axiosInstance.get(`/ajax/v2/episode/list/${id.split('-').pop()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            Referer: `${BASE_URL}/watch/${id}`,
+          },
+      });
+      const episodePageData = episodePage.data.html;
+
+      const $$ = load(episodePageData);
+
+      $$('div.ss-list > a').each((ind: any, ele: any) => {
+          info.episodes.push({
+              id: $$(ele).attr('href')?.split('/')[2]!,
+              episodeNumber: parseInt($$(ele).find('div.ssli-order').text().replace('Ep', '').replace(/\s+/g, ' ').trim()),
+              title: $$(ele).find('div.ssli-order').attr('title'),
+          })
+      })
+        
+      return info;
+  }catch (error) {
+      return {error: `Some error occurred: ${error}`};
+  }
+
 }
