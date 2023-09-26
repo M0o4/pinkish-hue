@@ -10,7 +10,7 @@
   "engines": {
     "node": ">=12.5.0",
     "yarn": ">=1.17.3"
-},
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Anuragkumarsah/pinkish-hue.git"
@@ -31,6 +31,7 @@
     "axios": "^1.5.0",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2"
   },

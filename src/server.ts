@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-import type { IAnimeInfo, IError, IRecentEpisodes, ISearchData } from "./types/aniwatch.d.ts";
-import { fetchRecentEpisodes, fetchPopular, fetchSearch, fetchInfo } from "./utils/aniwatch_parser";
+import type { IAnimeInfo, IEpisodeSources, IError, IRecentEpisodes, ISearchData } from "./types/aniwatch.d.ts";
+import { fetchRecentEpisodes, fetchPopular, fetchSearch, fetchInfo, fetchEpisodeSource } from "./utils/aniwatch_parser";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,12 +17,9 @@ app.use(cors(corsOptions));
 app.get("/", (req: any, res: any) => {
   const homeinfo = {
     message: "Welcome to the Pinkish-Hue API! 🎉",
-    "endpoints (working)": ["/recent-episodes", "/popular",
+    "endpoints": ["/recent-episodes", "/popular",
     "/search?keyword=yourkeyword",
-    "/info/:id",],
-    "endpoints (under development)": [
-      "/watch/:id"
-    ],
+    "/info/:id","/watch/:id"],
   };
   res.status(200).send(homeinfo);
 });
@@ -73,6 +70,19 @@ app.get("/info/:id", async (req: any, res: any) => {
   try {
     const id: string = req.params.id;
     const data: IAnimeInfo | IError = await fetchInfo({id: id});
+    // console.log(id);
+    
+    res.send(data);
+  } catch (error) {
+    res.status(400).send({error: `Some error occurred: ${error}`});
+  }
+})
+
+app.get("/watch/:id", async (req: any, res: any) => {
+  try {
+    const episode: string = req.query?.ep as string;
+    const id: string = req.params.id + '?ep=' + episode;
+    const data: IEpisodeSources | IError = await fetchEpisodeSource(id);
     // console.log(id);
     
     res.send(data);

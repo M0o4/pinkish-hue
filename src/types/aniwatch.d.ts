@@ -82,3 +82,19 @@ export type IRelatedAnime = {
     episodeDuration: string | null;
     totalEpisodes: number | null;
 }
+
+export type IEpisodeSources = {
+    sources: {
+        url: string;
+        quality: string;
+        isM3U8: boolean;
+    }[],
+    subTitles: {
+        url: string;
+        lang: string;
+    }[],
+    intro: {
+        start: number;
+        end: number;
+    }
+}

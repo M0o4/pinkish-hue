@@ -3,12 +3,17 @@
 
 const axios = require("axios");
 const { load } = require("cheerio");
+const CryptoJS = require("crypto-js");
 
-import type { IAnimeInfo, IEpisode, IEpisodeData, IError, IRecentEpisodes, IRelatedAnime, ISearchData, ISearchResult, IVoiceActors } from "../types/aniwatch.d.ts";
+import type { IAnimeInfo, IEpisode, IEpisodeData, IEpisodeSources, IError, IRecentEpisodes, IRelatedAnime, ISearchData, ISearchResult, IVoiceActors } from "../types/aniwatch.d.ts";
 
 const BASE_URL: string = "https://aniwatch.to";
 
 const axiosInstance = axios.create({ baseURL: BASE_URL });
+
+
+const fallBackKey : string = 'c1d17096f2ca11b7';
+const rapidCloudHost : string = 'https://rapid-cloud.co';
 
 export const fetchRecentEpisodes = async ({
   page = 1,
@@ -311,4 +316,157 @@ export const fetchInfo = async ({ id } : {id : string}) : Promise<IAnimeInfo | I
       return {error: `Some error occurred: ${error}`};
   }
 
+}
+
+async function rapidCloudExtract(url: URL) : Promise<IEpisodeSources | IError> {
+    let videoSources = [];
+    const result : {sources: any; subTitles: any; intro : {start : number; end: number}} = {
+      sources: [],
+      subTitles: [],
+      intro: {
+        start: 0,
+        end: 0
+      }
+    }
+    try {
+      const id = url.href.split('/').pop()?.split('?')[0];
+      const options = {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      };
+      const response = await axiosInstance.get(
+        `https://${url.hostname}/embed-2/ajax/e-1/getSources?id=${id}`,
+        options
+      );
+
+      let {
+        data: {sources, tracks, intro, encrypted}
+      } = response;
+      // console.log(sources);
+      
+      const decrypt = await (
+        await axios.get('https://github.com/enimax-anime/key/blob/e6/key.txt')
+      ).data;
+
+      const blobString = '"blob-code blob-code-inner js-file-line">';
+      const afterIndex = decrypt.indexOf('"blob-code blob-code-inner js-file-line">');
+      const newblobString = afterIndex == -1 ? '' : decrypt.substring(afterIndex + blobString.length);
+      const beforeIndex = newblobString.indexOf('</td>');
+      let decryptKey = beforeIndex == -1 ? '' : newblobString.substring(0, beforeIndex);
+
+      if(!decryptKey) {
+        decryptKey = await (await axios.get('https://raw.githubusercontent.com/enimax-anime/key/e6/key.txt')).data;
+      }
+
+      let key = !decryptKey ? fallBackKey : decryptKey;
+
+      if(encrypted) {
+        const sourcesArray = sources.split('');
+        let extractedKey = '';
+        for (const index of decryptKey) {
+          for (let i = index[0]; i < index[1]; i++) {
+            extractedKey += sources[i];
+            sourcesArray[i] = '';
+          }
+        }
+        key = extractedKey;
+        
+        sources = sourcesArray.join('');
+
+
+        const decrypt = CryptoJS.AES.decrypt(sources, key);
+        sources = JSON.parse(decrypt.toString(CryptoJS.enc.Utf8));
+      }
+      
+      videoSources = sources?.map((source: any) => ({
+        url: source.file,
+        isM3U8: source.file.includes('.m3u8')
+      }))
+
+      // console.log(await axiosInstance.get(sources[0].file.toString()));
+      
+
+      result.sources.push(...videoSources);
+          result.sources = [];
+          videoSources = [];
+          for(const source of sources) {
+            const { data } = await axiosInstance.get(source.file, options);
+            const m3u8Data = data.split('\n').filter((line : string) => line.includes('.m3u8') && line.includes('RESOLUTION='));
+            const resData = m3u8Data.map((line : string) => 
+            line.match(/RESOLUTION=.*,(C)|URI=.*/g)?.map((s: string) => s.split('=')[1])
+            );
+            const resArray = resData.map((s: string[]) => {
+              const x = s[0].split(',C')[0];
+              const y = s[1].replace(/"/g,'');
+              return [x, y];
+            });
+            for(const [x, y] of resArray) {
+              videoSources.push({
+                url: `${source.file?.split('master.m3u8')[0]}${y.replace('iframes', 'index')}`,
+                quality: x.split('x')[1]+'p',
+                isM3U8: y.includes('.m3u8'),
+              });
+            }
+            result.sources.push(...videoSources);
+          }
+
+      if(intro?.end > 1) {
+        result.intro = {
+          start: intro.start,
+          end: intro.end
+        }
+      }
+
+      result.sources.push({
+        url: sources[0].file,
+        isM3U8: sources[0].file?.includes('.m3u8'),
+        quality: 'default'
+      })
+      
+
+      result.subTitles = tracks.map((source: any) => {
+        return source.file ? {
+          url: source.file,
+          lang: source.label ? source.label : 'Thumbnails',
+        } : null
+      }).filter((source: any) => source != null);
+      return result;
+    }catch (error){
+      return {error: `Some error occurred: ${error}`};
+    }
+}
+
+
+export const fetchEpisodeSource = async (id : string) : Promise<IEpisodeSources | IError> => {
+  if(id === undefined || id === '' || id == null) return {error: "No id provided."};
+
+  try{
+    if(id.startsWith('http')) {
+      const serverUrl = new URL(id);
+      return {
+        ...(await rapidCloudExtract(serverUrl)),
+      }
+    }
+
+    // console.log(id.split('?ep=')[1]);
+    const {data} = await axiosInstance.get(`${BASE_URL}/ajax/v2/episode/servers?episodeId=${id.split('?ep=')[1]}`);
+    
+    const $ = load(data.html);
+
+    const serverId: any = $('div.servers-sub > div.ps__-list > div.server-item').map((ind : any, ele : any) => {
+        return  ($(ele).attr('data-server-id') == '4' ? $(ele) : null)
+    }).get()[0].attr('data-id');
+    // console.log(serverId);
+    if(!serverId) throw new Error('VidStreaming not found! Try other server');
+
+    const { 
+      data : { link }
+    } = await axiosInstance.get(`${BASE_URL}/ajax/v2/episode/sources?id=${serverId}`);
+
+    return await fetchEpisodeSource(link);
+
+  }catch(error) {
+    return {error: `Some error occurred: ${error}`};
+  }
 }
