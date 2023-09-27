@@ -10,6 +10,7 @@
     <br />
     <a href="#routes"><strong>Explore the api »</strong></a>
     <br />
+    <samp><i>Please don't abuse the api, deploy your own copy of the api for free using the providers given below.</i></samp>
     <br />
   </p>
 </p>
@@ -27,7 +28,6 @@
   - [Get Streaming URLs](#get-streaming-urls)
     - [Vidstreaming](#vidstreaming)
 - [Contributing](#contributing)
-- [Showcases](#showcases)
 
 ## Installation
 
