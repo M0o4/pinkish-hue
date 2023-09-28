@@ -66,7 +66,7 @@ export type IEpisode = {
 
 export type IVoiceActors = {
     name: string;
-    chacacterName: string;
+    characterName: string;
     image: string;
     characterImage: string;
     role: string;

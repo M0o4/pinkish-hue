@@ -258,7 +258,7 @@ export const fetchInfo = async ({ id } : {id : string}) : Promise<IAnimeInfo | I
             image: $(ele).find('div.rtl > a.pi-avatar > img').attr('data-src'),
             role: $(ele).find('div.ltr > div.pi-detail > span.pi-cast').text().replace(/\s+/g, ' '),
             cast: $(ele).find('div.rtl > div.pi-detail > span.pi-cast').text().replace(/\s+/g, ' '),
-            chacacterName: $(ele).find('div.ltr > div.pi-detail > h4.pi-name > a').text().replace(/\s+/g, ' '),
+            characterName: $(ele).find('div.ltr > div.pi-detail > h4.pi-name > a').text().replace(/\s+/g, ' '),
             characterImage: $(ele).find('div.ltr > a.pi-avatar > img').attr('data-src'),
           })
       })
