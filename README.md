@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/Anuragkumarsah/pinkish-hue">
-    <img src="images/image.png" alt="Logo" width="90" height="90">
+    <img src="images/image1.png" alt="Logo" width="90" height="90">
   </a>
 
   <h3 align="center">Pinkish Hue API</h3>
@@ -51,6 +51,11 @@ Now the server is running on http://localhost:3000
 Host your own instance of the api on Vercel using the button below.
 
 [![Deploy on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Anuragkumarsah/pinkish-hue)
+
+### Railway
+Host your own instance of the api on Railway using the button below.
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/CJ1jmh?referralCode=mzHUTS)
 
 ## Routes
 Below you'll find examples using [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) but you can use any other http library out there.
