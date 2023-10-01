@@ -11,14 +11,14 @@ export type IRecentEpisodes = {
 
 export type IEpisodeData = {
     id: string;
-    episodeNumber: number;
+    episodeNumber: number | undefined;
     title: string;
     alternateTitle: string;
     image: string;
     description: string;
     type: string;
     episodeDuration: string;
-    totalEpisodes: number | null;
+    totalEpisodes: number | undefined;
 }
 
 export type ISearchData = {

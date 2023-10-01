@@ -13,6 +13,7 @@ import {
   fetchSearch,
   fetchInfo,
   fetchEpisodeSource,
+  fetchTrending,
 } from "./utils/aniwatch_parser";
 
 const app = express();
@@ -32,6 +33,7 @@ app.get("/", (req: any, res: any) => {
     endpoints: [
       "/recent-episodes",
       "/popular",
+      "/trending",
       "/search?keyword=yourkeyword",
       "/info/:id",
       "/watch/:id",
@@ -76,6 +78,11 @@ app.get(
     }
   }
 );
+
+app.get('/trending', async (req: any, res: any) => {
+  const data = await fetchTrending();
+  res.send(data);
+})
 
 app.get(
   "/search",
