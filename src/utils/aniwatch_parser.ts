@@ -482,6 +482,7 @@ async function rapidCloudExtract(url: URL): Promise<IEpisodeSources | IError> {
     sources: any;
     subTitles: any;
     intro: { start: number; end: number };
+    server: string;
   } = {
     sources: [],
     subTitles: [],
@@ -489,6 +490,7 @@ async function rapidCloudExtract(url: URL): Promise<IEpisodeSources | IError> {
       start: 0,
       end: 0,
     },
+    server: '',
   };
   try {
     const id = url.href.split("/").pop()?.split("?")[0];
@@ -620,7 +622,7 @@ async function rapidCloudExtract(url: URL): Promise<IEpisodeSources | IError> {
 
 export const fetchEpisodeSource = async (
   id: string
-): Promise<IEpisodeSources | IError> => {
+): Promise<IEpisodeSources[] | IEpisodeSources | IError> => {
   if (id === undefined || id === "" || id == null)
     return { error: "No id provided." };
 
@@ -639,22 +641,28 @@ export const fetchEpisodeSource = async (
 
     const $ = load(data.html);
 
-    const serverId: any = $("div.servers-sub > div.ps__-list > div.server-item")
+    const serverId: any[] = $("div.servers-sub > div.ps__-list > div.server-item")
       .map((ind: any, ele: any) => {
-        return $(ele).attr("data-server-id") == "4" ? $(ele) : null;
+        const server = {
+          name: $(ele).text().replace(/\s/g, ""),
+          id: $(ele).attr("data-id"),
+        }
+        return server;
       })
-      .get()[0]
-      .attr("data-id");
     // console.log(serverId);
     if (!serverId) throw new Error("VidStreaming not found! Try other server");
-
-    const {
-      data: { link },
-    } = await axiosInstance.get(
-      `${BASE_URL}/ajax/v2/episode/sources?id=${serverId}`
-    );
-
-    return await fetchEpisodeSource(link);
+    const response_data : IEpisodeSources[] = [];
+    for (const server of serverId) {
+      const {data: { link }} = await axiosInstance.get(
+        `${BASE_URL}/ajax/v2/episode/sources?id=${server.id}`
+      );
+      const episodeSourceData = await fetchEpisodeSource(link);
+      if ('server' in episodeSourceData) {
+        episodeSourceData.server = server.name;
+        response_data.push(episodeSourceData);
+      }
+    }
+    return response_data;
   } catch (error) {
     return { error: `Some error occurred: ${error}` };
   }

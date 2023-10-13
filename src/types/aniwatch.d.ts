@@ -96,5 +96,6 @@ export type IEpisodeSources = {
     intro: {
         start: number;
         end: number;
-    }
+    },
+    server: string;
 }

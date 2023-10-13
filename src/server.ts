@@ -123,7 +123,7 @@ app.get("/watch/:id", async (req: any, res: any) => {
   try {
     const episode: string = req.query?.ep as string;
     const id: string = req.params.id + "?ep=" + episode;
-    const data: IEpisodeSources | IError = await fetchEpisodeSource(id);
+    const data: IEpisodeSources[] | IEpisodeSources | IError = await fetchEpisodeSource(id);
     // console.log(id);
 
     res.send(data);
